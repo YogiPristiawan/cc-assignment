@@ -1,9 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\DepositController;
 
-Route::post('/deposit', function () {
-    return response()->json([
-        'message' => 'success'
-    ]);
-});
+Route::post('/deposit', [DepositController::class, 'createDeposit']);
