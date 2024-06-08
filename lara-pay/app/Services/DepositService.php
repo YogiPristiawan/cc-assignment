@@ -14,6 +14,8 @@ use App\Lib\PaymentSdk;
 use App\Models\BalanceHistory;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use App\Jobs\ProcessBalance;
+use App\Jobs\Params\ProcessBalanceParam;
 use Exception;
 use Throwable;
 use DateTime;
@@ -106,44 +108,12 @@ class DepositService
         }
         $validatedArgs = $validator->validated();
 
-        $maxAttempt = 3;
-        $attemptRemaining = $maxAttempt;
-        while ($attemptRemaining > 0) {
-            DB::beginTransaction();
-            try {
-                DB::statement("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
-                $user = User::where('id', $validatedArgs['user_uid'])->first(['current_balance']);
-
-                BalanceHistory::create([
-                    'transaction_order_id' => $validatedArgs['transaction_order_id'],
-                    'user_uid' => $validatedArgs['user_uid'],
-                    'amount' => (float)$validatedArgs['amount']
-                ]);
-
-                User::where('id', $validatedArgs['user_uid'])->update([
-                    'current_balance' => $user->current_balance + (float)$validatedArgs['amount']
-                ]);
-
-                Transaction::where('order_id', $validatedArgs['transaction_order_id'])->update([
-                    'status' => TransactionStatus::Success
-                ]);
-                DB::commit();
-
-                return;
-            } catch (Throwable $t) {
-                DB::rollBack();
-
-                $attemptRemaining--;
-                if ($attemptRemaining == 0) {
-                    Transaction::where('order_id', $validatedArgs['transaction_order_id'])->update([
-                        'status' => TransactionStatus::Success
-                    ]);
-
-                    throw $t;
-                }
-            }
-
-            sleep(($maxAttempt - $attemptRemaining) * 2);
-        }
+        $processBalanceParam = new ProcessBalanceParam([
+            'transaction_type' => TransactionType::Deposit,
+            'transaction_order_id' => $validatedArgs['transaction_order_id'],
+            'user_uid' => $validatedArgs['user_uid'],
+            'amount' => $validatedArgs['amount']
+        ]);
+        ProcessBalance::dispatch($processBalanceParam);
     }
 }
