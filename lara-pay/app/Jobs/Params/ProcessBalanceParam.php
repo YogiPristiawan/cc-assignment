@@ -24,7 +24,7 @@ class ProcessBalanceParam
 
         $this->transactionType = $args['transaction_type'];
         $this->transactionOrderId = $args['transaction_order_id'];
-        $this->userUid = $args['user_uid'];
+        $this->userUid = $args['user_id'];
         $this->amount = $args['amount'];
     }
     /**
@@ -36,7 +36,7 @@ class ProcessBalanceParam
         $validator = Validator::make($args, [
             'transaction_type' => ['required', Rule::enum(TransactionType::class)],
             'transaction_order_id' => ['required', 'uuid'],
-            'user_uid' => ['required', 'uuid'],
+            'user_id' => ['required', 'uuid'],
             'amount' => ['required', 'string', 'decimal:2']
         ]);
         if ($validator->fails()) {

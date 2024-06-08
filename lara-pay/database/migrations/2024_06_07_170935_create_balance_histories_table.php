@@ -16,13 +16,13 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->uuid('uid')->default(DB::raw('gen_random_uuid()'));
             $table->uuid('transaction_order_id');
-            $table->uuid('user_uid');
+            $table->uuid('user_id');
             $table->decimal('amount', 10, 2);
             $table->timestampsTz();
 
             $table->primary('id');
             $table->index('uid');
-            $table->index('user_uid');
+            $table->index('user_id');
         });
     }
 

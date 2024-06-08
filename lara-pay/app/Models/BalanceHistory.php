@@ -12,7 +12,7 @@ class BalanceHistory extends Model
     protected $table = 'balance_histories';
     protected $fillable = [
         'uid',
-        'user_uid',
+        'user_id',
         'transaction_order_id',
         'amount',
         'updated_at'

@@ -89,7 +89,7 @@ class DepositService
             $this->updateBalance([
                 'transaction_order_id' => $transaction->order_id,
                 'amount' => $payload['transaction']['amount'],
-                'user_uid' => $userId
+                'user_id' => $userId
             ]);
         }
     }
@@ -100,7 +100,7 @@ class DepositService
     {
         $validator = Validator::make($args, [
             'transaction_order_id' => ['required', 'string', 'uuid'],
-            'user_uid' => ['required', 'string', 'uuid'],
+            'user_id' => ['required', 'string', 'uuid'],
             'amount' => ['required', 'string', 'decimal:2']
         ]);
         if ($validator->fails()) {
@@ -111,7 +111,7 @@ class DepositService
         $processBalanceParam = new ProcessBalanceParam([
             'transaction_type' => TransactionType::Deposit,
             'transaction_order_id' => $validatedArgs['transaction_order_id'],
-            'user_uid' => $validatedArgs['user_uid'],
+            'user_id' => $validatedArgs['user_id'],
             'amount' => $validatedArgs['amount']
         ]);
         ProcessBalance::dispatch($processBalanceParam);
