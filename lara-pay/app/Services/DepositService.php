@@ -36,7 +36,6 @@ class DepositService
             throw new BadRequestException($validator->errors()->first());
         }
         $payload = $validator->validated();
-        $amount = (float)$payload['transaction']['amount'];
 
         // get the user detail
         $user = User::where('id', $userId)->first(['name']);
@@ -44,6 +43,7 @@ class DepositService
 
         // crate a transaction history
         $shouldUpdateBalance = false;
+        $transaction = null;
         DB::beginTransaction();
         try {
             $transaction = Transaction::create([
@@ -76,7 +76,7 @@ class DepositService
         }
 
         // update balance asynchronously
-        if ($shouldUpdateBalance) {
+        if ($shouldUpdateBalance && $transaction !== null) {
             $this->updateBalance([
                 'transaction_order_id' => $transaction->order_id,
                 'amount' => $payload['transaction']['amount'],
