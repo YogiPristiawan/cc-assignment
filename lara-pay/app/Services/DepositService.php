@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Enums\Transaction\Status as TransactionStatus;
 use App\Enums\Transaction\Type as TransactionType;
+use App\Exception\Http\InternalServerError;
 use App\Exception\Http\NotFoundException;
 use App\Lib\PaymentSdk;
 use App\Models\BalanceHistory;
@@ -42,7 +43,7 @@ class DepositService
         if (!$user) throw new NotFoundException('user not found');
 
         // crate a transaction history
-        $shouldUpdateBalance = false;
+        $paymentChargeSuccess = false;
         $transaction = null;
         DB::beginTransaction();
         try {
@@ -60,13 +61,13 @@ class DepositService
                     'name' => $user->name
                 ],
                 'transaction' => [
-                    'order_id' => $transaction->order_id,
+                    'order_id' => (string)$transaction->order_id,
                     'amount' => $payload['transaction']['amount']
                 ],
                 'timestamp' => $transaction->created_at->format(DateTime::RFC3339)
             ]);
             if ($paymentResponse['status'] === 1) {
-                $shouldUpdateBalance = true;
+                $paymentChargeSuccess = true;
             }
 
             DB::commit();
@@ -74,9 +75,15 @@ class DepositService
             DB::rollBack();
             throw $t;
         }
+        if (!$paymentChargeSuccess && $transaction !== null) {
+            Transaction::where('order_id', (string)$transaction->order_id)->update([
+                'status' => TransactionStatus::Failed
+            ]);
+            throw new InternalServerError('failed to create deposit');
+        }
 
         // update balance asynchronously
-        if ($shouldUpdateBalance && $transaction !== null) {
+        if ($paymentChargeSuccess && $transaction !== null) {
             $this->updateBalance([
                 'transaction_order_id' => $transaction->order_id,
                 'amount' => $payload['transaction']['amount'],
@@ -116,6 +123,10 @@ class DepositService
                 User::where('id', $validatedArgs['user_uid'])->update([
                     'current_balance' => $user->current_balance + (float)$validatedArgs['amount']
                 ]);
+
+                Transaction::where('order_id', $validatedArgs['transaction_order_id'])->update([
+                    'status' => TransactionStatus::Success
+                ]);
                 DB::commit();
 
                 return;
@@ -124,6 +135,10 @@ class DepositService
 
                 $attemptRemaining--;
                 if ($attemptRemaining == 0) {
+                    Transaction::where('order_id', $validatedArgs['transaction_order_id'])->update([
+                        'status' => TransactionStatus::Success
+                    ]);
+
                     throw $t;
                 }
             }

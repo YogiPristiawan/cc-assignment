@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exception\Http\BadRequestException;
+use App\Exception\Http\InternalServerError;
 use App\Exception\Http\NotFoundException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -43,7 +44,7 @@ class WithdrawService
         if (!$user) throw new NotFoundException('user not found');
 
         // create a withdraw transaction history
-        $shouldUpdateBalance = false;
+        $payoutChargeSuccess = false;
         DB::beginTransaction();
         try {
             $transaction = Transaction::create([
@@ -66,7 +67,7 @@ class WithdrawService
                 'timestamp' => $transaction->created_at->format(DateTime::RFC3339)
             ]);
             if ($payoutResponse['status'] === 1) {
-                $shouldUpdateBalance = true;
+                $payoutChargeSuccess = true;
             }
 
             DB::commit();
@@ -74,9 +75,15 @@ class WithdrawService
             DB::rollBack();
             throw $t;
         }
+        if (!$payoutChargeSuccess && $transaction !== null) {
+            Transaction::where('order_id', (string)$transaction->order_id)->update([
+                'status' => TransactionStatus::Failed
+            ]);
+            throw new InternalServerError('failed to create deposit');
+        }
 
         // update balance asynchronously
-        if ($shouldUpdateBalance && $transaction !== null) {
+        if ($payoutChargeSuccess && $transaction !== null) {
             $this->updateBalance([
                 'transaction_order_id' => $transaction->order_id,
                 'amount' => $requestBody['transaction']['amount'],
@@ -116,6 +123,10 @@ class WithdrawService
                 User::where('id', $validatedArgs['user_uid'])->update([
                     'current_balance' => $user->current_balance - (float)$validatedArgs['amount']
                 ]);
+
+                Transaction::where('order_id', $validatedArgs['transaction_order_id'])->update([
+                    'status' => TransactionStatus::Success
+                ]);
                 DB::commit();
 
                 return;
@@ -124,6 +135,10 @@ class WithdrawService
 
                 $attemptRemaining--;
                 if ($attemptRemaining == 0) {
+                    Transaction::where('order_id', $validatedArgs['transaction_order_id'])->update([
+                        'status' => TransactionStatus::Failed
+                    ]);
+
                     throw $t;
                 }
             }
