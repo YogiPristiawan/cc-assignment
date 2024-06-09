@@ -1,14 +1,48 @@
 import { Card, CardHeader, CardContent } from "@/components/ui/card"
 import { Table, TableCaption, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
-import { FetchTransactionResponse } from "@/store/home"
+import { FetchTransactionResponse, fetchTransactions } from "@/store/home"
 import { Link, useLoaderData } from "react-router-dom"
+import { Badge } from "@/components/ui/badge"
+import { useEffect, useState } from "react"
+
+function renderTransactionStatus(status: string) {
+  switch (status) {
+    case "Belum dibayar":
+      return <Badge variant="secondary">{status}</Badge>
+    case "Pending":
+      return <Badge className="bg-yellow-500">{status}</Badge>
+    case "Sukses":
+      return <Badge className="bg-green-500">{status}</Badge>
+    case "Gagal":
+      return <Badge className="bg-red-500">{status}</Badge>
+  }
+}
+
+function renderTransactionType(type: string) {
+  switch (type) {
+    case "Deposit":
+      return <Badge className="bg-green-500">{type}</Badge>
+    case "Withdraw":
+      return <Badge className="bg-red-500">{type}</Badge>
+  }
+}
 
 export default function Home() {
-  const response = useLoaderData() as FetchTransactionResponse
+  const [transactions, setTransactions] = useState<FetchTransactionResponse["data"]>([])
 
-  if (response.error) {
-    alert(response.message)
-  }
+  useEffect(() => {
+    async function fetchData() {
+      const response = await fetchTransactions()
+      if (response.error) {
+        alert(response.message)
+        return
+      }
+
+      setTransactions(response.data)
+    }
+
+    fetchData()
+  }, [])
 
   return (
     <>
@@ -38,14 +72,14 @@ export default function Home() {
 
             <TableBody>
               {
-                response.data.map((transaction, i) => {
+                transactions.map((transaction, i) => {
                   return (
                     <TableRow key={transaction.order_id}>
                       <TableCell>{i + 1}</TableCell>
                       <TableCell>{transaction.order_id}</TableCell>
-                      <TableCell>{transaction.type}</TableCell>
-                      <TableCell>{transaction.amount}</TableCell>
-                      <TableCell>{transaction.status}</TableCell>
+                      <TableCell>{renderTransactionType(transaction.type)}</TableCell>
+                      <TableCell>{transaction.type === "Deposit" ? transaction.amount : `-${transaction.amount}`}</TableCell>
+                      <TableCell>{renderTransactionStatus(transaction.status)}</TableCell>
                       <TableCell>{transaction.created_at}</TableCell>
                     </TableRow>
                   )
