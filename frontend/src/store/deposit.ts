@@ -1,3 +1,5 @@
+import env from "@/config/env"
+
 export type CreateDepositArgs = {
   amount: string
 }
@@ -14,7 +16,10 @@ export const createDeposit = async (args: CreateDepositArgs) => {
     }
   }
 
-  const response = await fetch("http://localhost:8000/api/deposit", {
+  const apiBaseUrl = env.API_BASE_URL ?? ""
+  const url = new URL(apiBaseUrl + "/api/deposit")
+
+  const response = await fetch(url, {
     method: "POST",
     body: JSON.stringify(payload),
     headers: {

@@ -1,3 +1,5 @@
+import env from "@/config/env"
+
 export type CreateWithdrawArgs = {
   amount: string
 }
@@ -14,7 +16,10 @@ export const createWithdraw = async (args: CreateWithdrawArgs) => {
     }
   }
 
-  const response = await fetch("http://localhost:8000/api/withdraw", {
+  const apiBaseUrl = env.API_BASE_URL ?? ""
+  const url = new URL(apiBaseUrl + "/api/withdraw")
+
+  const response = await fetch(url, {
     method: "POST",
     body: JSON.stringify(payload),
     headers: {

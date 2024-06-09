@@ -1,3 +1,5 @@
+import env from "@/config/env"
+
 export type FetchTransactionResponse = {
   error: boolean,
   message: string,
@@ -11,7 +13,11 @@ export type FetchTransactionResponse = {
 }
 
 export async function fetchTransactions(): Promise<FetchTransactionResponse> {
-  const response = await fetch("http://localhost:8000/api/transactions", {
+  const apiBaseUrl = env.API_BASE_URL ?? ""
+  console.log(apiBaseUrl)
+  const url = new URL(apiBaseUrl + "/api/transactions")
+
+  const response = await fetch(url, {
     method: "GET",
     cache: "no-store"
   })
@@ -42,7 +48,10 @@ export type FetchCurrentBalanceResponse = {
 }
 
 export async function fetchCurrentBalance(): Promise<FetchCurrentBalanceResponse> {
-  const response = await fetch("http://localhost:8000/api/current-balance", {
+  const apiBaseUrl = env.API_BASE_URL ?? ""
+  const url = new URL(apiBaseUrl + "/api/current-balance")
+
+  const response = await fetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json"
