@@ -3,16 +3,19 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card"
 import { Label } from "@radix-ui/react-label"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { useState } from "react"
 import { CreateDepositArgs, createDeposit } from "@/store/deposit"
+import { useNavigate } from "react-router-dom"
 
 export default function Deposit() {
+  const [input, setInput] = useState<CreateDepositArgs>({ amount: "" })
+  const navigate = useNavigate()
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-
-    // createDeposit({
-    //   amount: e
-    // })
+    const response = await createDeposit(input)
+    alert(response.message)
+    return navigate("/")
   }
 
   return (
@@ -24,7 +27,14 @@ export default function Deposit() {
       <CardContent className="pt-6">
         <form onSubmit={(e) => handleSubmit(e)}>
           <Label htmlFor="amount">Nominal</Label>
-          <Input id="amount" type="number" name="amount" />
+          <Input id="amount" step=".01" type="number" name="amount" onChange={((e) => {
+            setInput((prev) => {
+              return {
+                ...prev,
+                amount: Number(e.target.value).toFixed(2).toString()
+              }
+            })
+          })} />
 
           <Button type="submit" variant="default" className="mt-4">Simpan</Button>
         </form>

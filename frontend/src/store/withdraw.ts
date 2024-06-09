@@ -1,30 +1,30 @@
-export type CreateDepositArgs = {
+export type CreateWithdrawArgs = {
   amount: string
 }
 
-export type CreateDepositResopnse = {
+export type CreateWithdrawResopnse = {
   error: boolean
   message: string
 }
 
-export const createDeposit = async (args: CreateDepositArgs) => {
+export const createWithdraw = async (args: CreateWithdrawArgs) => {
   const payload = {
     transaction: {
       amount: args.amount
     }
   }
 
-  const response = await fetch("http://localhost:8000/api/deposit", {
+  const response = await fetch("http://localhost:8000/api/withdraw", {
     method: "POST",
     body: JSON.stringify(payload),
     headers: {
-      "Content-Type": "application/jskkkn"
+      "Content-Type": "application/json"
     }
   })
 
-  let json: CreateDepositResopnse | null = null
+  let json: CreateWithdrawResopnse | null = null
   try {
-    json = (await response.json()) as CreateDepositResopnse
+    json = (await response.json()) as CreateWithdrawResopnse
   } catch (err) {
     console.log(err)
   }
