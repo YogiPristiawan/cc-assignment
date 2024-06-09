@@ -14,6 +14,7 @@ use App\Jobs\Params\ProcessBalanceParam;
 use Illuminate\Support\Facades\DB;
 use App\Enums\Transaction\Status as TransactionStatus;
 use App\Enums\Transaction\Type as TransactionType;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ProcessBalance implements ShouldQueue
@@ -41,7 +42,7 @@ class ProcessBalance implements ShouldQueue
             DB::beginTransaction();
             try {
                 DB::statement("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
-                $user = User::where('id', $this->param->userUid)->first(['current_balance']);
+                $user = User::where('id', $this->param->userId)->first(['current_balance']);
 
                 $amount = (float)$this->param->amount;
 
@@ -49,7 +50,13 @@ class ProcessBalance implements ShouldQueue
                     $amount *= -1;
                 }
 
-                User::where('id', $this->param->userUid)->update([
+                BalanceHistory::create([
+                    'transaction_order_id' => $this->param->transactionOrderId,
+                    'user_id' => $this->param->userId,
+                    'amount' => $amount
+                ]);
+
+                User::where('id', $this->param->userId)->update([
                     'current_balance' => $user->current_balance + $amount
                 ]);
 
@@ -67,6 +74,8 @@ class ProcessBalance implements ShouldQueue
                     Transaction::where('order_id', $this->param->transactionOrderId)->update([
                         'status' => TransactionStatus::Success
                     ]);
+
+                    Log::error($t);
 
                     $this->fail($t);
                 }

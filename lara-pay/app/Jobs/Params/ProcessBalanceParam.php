@@ -11,7 +11,7 @@ class ProcessBalanceParam
 {
     public TransactionType $transactionType;
     public string $transactionOrderId;
-    public string $userUid;
+    public string $userId;
     public string $amount;
 
     /**
@@ -24,7 +24,7 @@ class ProcessBalanceParam
 
         $this->transactionType = $args['transaction_type'];
         $this->transactionOrderId = $args['transaction_order_id'];
-        $this->userUid = $args['user_id'];
+        $this->userId = $args['user_id'];
         $this->amount = $args['amount'];
     }
     /**
