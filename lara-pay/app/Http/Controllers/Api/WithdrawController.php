@@ -23,7 +23,7 @@ class WithdrawController extends Controller
     public function createWithdraw(Request $request): JsonResponse
     {
         try {
-            $userId = 'e61796f8-4aaa-4bfe-b29a-34cf284b4276'; // TODO: change this
+            $userId = 'e61796f8-4aaa-4bfe-b29a-34cf284b4276'; // TODO: we should use auth here
 
             $this->withdrawService->create($userId, $request->all());
 

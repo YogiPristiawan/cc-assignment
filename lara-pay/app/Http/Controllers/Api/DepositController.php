@@ -25,7 +25,7 @@ class DepositController extends Controller
     public function createDeposit(Request $request): JsonResponse
     {
         try {
-            $userId = 'e61796f8-4aaa-4bfe-b29a-34cf284b4276'; // TODO: change this
+            $userId = 'e61796f8-4aaa-4bfe-b29a-34cf284b4276'; // TODO: we must use auth, here
 
             $this->depositService->create($userId, $request->all());
 

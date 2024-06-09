@@ -18,7 +18,7 @@ export const createDeposit = async (args: CreateDepositArgs) => {
     method: "POST",
     body: JSON.stringify(payload),
     headers: {
-      "Content-Type": "application/jskkkn"
+      "Content-Type": "application/json"
     }
   })
 
