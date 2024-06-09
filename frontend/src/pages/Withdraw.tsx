@@ -27,7 +27,7 @@ export default function Withdraw() {
       <CardContent className="pt-6">
         <form onSubmit={(e) => handleSubmit(e)}>
           <Label htmlFor="amount">Nominal</Label>
-          <Input id="amount" type="number" name="amount" onChange={(e) => {
+          <Input id="amount" step=".01" type="number" name="amount" onChange={(e) => {
             setInput((prev) => {
               return {
                 ...prev,

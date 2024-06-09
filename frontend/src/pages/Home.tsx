@@ -28,6 +28,27 @@ function renderTransactionType(type: string) {
   }
 }
 
+function renderAmount(transactionType: string, amount: string) {
+  let className = ""
+
+  switch (transactionType) {
+    case "Deposit":
+      className = "text-green-500"
+      break
+    case "Withdraw":
+      className = "text-red-500"
+      amount = `-${amount}`
+      break
+  }
+
+  const formattedAmount = new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR"
+  }).format(Number(amount))
+
+  return <p className={className}>{formattedAmount}</p>
+}
+
 export default function Home() {
   const [homeData, setHomeData] = useState<{ transactions: FetchTransactionResponse["data"], currentBalance: string }>({
     transactions: [],
@@ -114,7 +135,7 @@ export default function Home() {
                       <TableCell>{i + 1}</TableCell>
                       <TableCell>{transaction.order_id}</TableCell>
                       <TableCell>{renderTransactionType(transaction.type)}</TableCell>
-                      <TableCell>{transaction.type === "Deposit" ? transaction.amount : `-${transaction.amount}`}</TableCell>
+                      <TableCell>{renderAmount(transaction.type, transaction.amount)}</TableCell>
                       <TableCell>{renderTransactionStatus(transaction.status)}</TableCell>
                       <TableCell>{transaction.created_at}</TableCell>
                     </TableRow>
