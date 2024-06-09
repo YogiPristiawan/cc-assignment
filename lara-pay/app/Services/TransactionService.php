@@ -13,7 +13,7 @@ class TransactionService
      */
     public function getHistories(string $userId): array
     {
-        $transactions = DB::table('transactions')->where('user_id', $userId)->get([
+        $transactions = DB::table('transactions')->where('user_id', $userId)->orderBy('id', 'DESC')->get([
             'order_id',
             'amount',
             'type',

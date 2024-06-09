@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Exception\Http\HttpException;
 use App\Http\Controllers\Controller;
 use App\Services\BalanceService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
 use Throwable;
@@ -17,8 +18,10 @@ class BalanceController extends Controller
     {
         $this->balanceService = $balanceService;
     }
-
-    public function getCurrentBalance()
+    /**
+     * @return JsonResponse
+     */
+    public function getCurrentBalance(): JsonResponse
     {
         try {
             $userId = 'e61796f8-4aaa-4bfe-b29a-34cf284b4276'; // TODO: we must use auth, here

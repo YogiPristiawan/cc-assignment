@@ -32,7 +32,7 @@ export const createWithdraw = async (args: CreateWithdrawArgs) => {
   if (!response.ok) {
     return {
       error: true,
-      messaege: json ? json.message : "something went wrong"
+      message: json ? json.message : "something went wrong"
     }
   }
 

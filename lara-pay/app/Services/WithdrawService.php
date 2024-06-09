@@ -45,6 +45,11 @@ class WithdrawService
         $user = User::where('id', $userId)->first(['name']);
         if (!$user) throw new NotFoundException('user not found');
 
+        // valiate balance
+        $balance = BalanceHistory::where('user_id', $userId)->sum('amount');
+        if ((float)$balance < (float)$validatedReqBody['transaction']['amount']) throw new BadRequestException("insufficicent balance");
+
+
         // create a withdraw transaction history
         $payoutChargeSuccess = false;
         DB::beginTransaction();
