@@ -1,9 +1,10 @@
 import { Card, CardHeader, CardContent } from "@/components/ui/card"
 import { Table, TableCaption, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
-import { FetchTransactionResponse, fetchTransactions } from "@/store/home"
-import { Link, useLoaderData } from "react-router-dom"
+import { FetchTransactionResponse, fetchCurrentBalance, fetchTransactions } from "@/store/home"
+import { Link } from "react-router-dom"
 import { Badge } from "@/components/ui/badge"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { cn } from "@/lib/utils"
 
 function renderTransactionStatus(status: string) {
   switch (status) {
@@ -28,32 +29,67 @@ function renderTransactionType(type: string) {
 }
 
 export default function Home() {
-  const [transactions, setTransactions] = useState<FetchTransactionResponse["data"]>([])
+  const [homeData, setHomeData] = useState<{ transactions: FetchTransactionResponse["data"], currentBalance: string }>({
+    transactions: [],
+    currentBalance: ""
+  })
+  const didMount = useRef<boolean>(false)
 
   useEffect(() => {
     async function fetchData() {
-      const response = await fetchTransactions()
-      if (response.error) {
-        alert(response.message)
+      const fetechTransactionsResponse = await fetchTransactions()
+      if (fetechTransactionsResponse.error) {
+        alert(fetechTransactionsResponse.message)
         return
       }
 
-      setTransactions(response.data)
+      const fetchCurrentBalanceResponse = await fetchCurrentBalance()
+      if (fetchCurrentBalanceResponse.error) {
+        alert(fetchCurrentBalanceResponse.message)
+        return
+      }
+
+      setHomeData((prev) => {
+        return {
+          ...prev,
+          transactions: fetechTransactionsResponse.data,
+          currentBalance: new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR"
+          }).format(Number(fetchCurrentBalanceResponse.data.current_balance)),
+        }
+      })
     }
 
-    fetchData()
+    if (!didMount.current) {
+      fetchData()
+    }
+    didMount.current = true
   }, [])
 
   return (
     <>
       <Card className="w-full text-center">
         <CardHeader>
-          <h1 className="text-3xl font-bold">Sisa Saldo</h1>
+          <div className="flex justify-center align-center gap-4">
+            <h1 className="text-3xl font-bold">Sisa Saldo:</h1>
+            <h1 className="text-3xl font-bold text-green-500">{homeData.currentBalance}</h1>
+          </div>
         </CardHeader>
         <CardContent className="mt-4">
-          <div className="grid grid-cols-8 gap-4 ">
-            <Link to="/deposit" className="p-4 bg-green-300 col-start-2 col-end-4 rounded-lg hover:bg-green-200">Deposit</Link>
-            <Link to="/withdraw" className="p-4 bg-red-300 col-start-6 col-end-8 rounded-lg hover:bg-red-200">Withdraw</Link>
+          <div className={cn(
+            "grid",
+            "md:grid-cols-8 md:gap-4",
+            "grid-rows-2 gap-4"
+          )}>
+            <Link to="/deposit" className={cn(
+              "p-4 bg-green-300 rounded-lg hover:bg-green-200",
+              "md:col-start-2 md:col-end-4"
+            )}>Deposit</Link>
+            <Link to="/withdraw" className={cn(
+              "p-4 bg-red-300 rounded-lg hover:bg-red-200",
+              "md:col-start-6 md:col-end-8"
+            )}>Withdraw</Link>
           </div>
 
           <Table className="mt-8 border rounded-lg">
@@ -72,7 +108,7 @@ export default function Home() {
 
             <TableBody>
               {
-                transactions.map((transaction, i) => {
+                homeData.transactions.map((transaction, i) => {
                   return (
                     <TableRow key={transaction.order_id}>
                       <TableCell>{i + 1}</TableCell>
